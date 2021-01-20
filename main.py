@@ -6,214 +6,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import plotting as plot_funcs
 import key_stream as keyed_num_gen
+import estimation as est
+import privilege_covariances as priv_cov
 
 SIM_TIMESTEPS = 100
-
-"""
- 
-  ######   ######## 
- ##    ##     ##    
- ##           ##    
- ##   ####    ##    
- ##    ##     ##    
- ##    ##     ##    
-  ######      ##    
- 
-"""
-
-class GroundTruth:
-    def __init__(self, F, Q, init_state):
-        self.F = F
-        self.Q = Q
-        self.state = init_state
-        return
-    
-    def update(self):
-        w = np.random.multivariate_normal(np.array([0, 0, 0, 0]), self.Q)
-        self.state = self.F@self.state + w
-        return self.state
-
-"""
- 
-  ######  ######## ##    ##  ######   #######  ########  
- ##    ## ##       ###   ## ##    ## ##     ## ##     ## 
- ##       ##       ####  ## ##       ##     ## ##     ## 
-  ######  ######   ## ## ##  ######  ##     ## ########  
-       ## ##       ##  ####       ## ##     ## ##   ##   
- ##    ## ##       ##   ### ##    ## ##     ## ##    ##  
-  ######  ######## ##    ##  ######   #######  ##     ## 
- 
-"""
-
-class SensorAbs:
-    def measure(self, ground_truth):
-        raise NotImplementedError
-
-class SensorNoEvents(SensorAbs):
-    def __init__(self, H, R):
-        self.H = H
-        self.R = R
-        return
-    
-    def measure(self, ground_truth):
-        v = np.random.multivariate_normal(np.array([0, 0]), self.R)
-        return self.H@ground_truth + v
-
-class SensorWithEventsAbs(SensorNoEvents):
-    def measure(self, ground_truth):
-        measurement = super().measure(ground_truth)
-        measurement_to_send = None
-        if self.is_event(measurement):
-            measurement_to_send = measurement
-        return measurement_to_send
-    
-    def is_event(self, measurement):
-        raise NotImplementedError
-
-class SensorRandEvent(SensorWithEventsAbs):
-    def __init__(self, H, R, Z, generator):
-        self.H = H
-        self.R = R
-        self.Z = Z
-        self.generator = generator
-        return
-    
-    def is_event(self, measurement):
-        u = self.generator.next()
-        prob_not_send = np.e ** (-0.5 * (measurement - u)@np.linalg.inv(self.Z)@(measurement - u))
-        urand = np.random.uniform()
-
-        print('u=', u, 'urand', urand, 'prob_not_send=', prob_not_send, (-0.5 * (measurement - u)@self.Z@(measurement - u)))
-
-        to_send = True
-        if urand <= prob_not_send:
-            to_send = False
-        return to_send
-
-class SensorTwoEvents(SensorWithEventsAbs):
-    def __init__(self, F, Q, H, R, init_x, init_P, Z, s, generator):
-        self.F = F
-        self.Q = Q
-        self.H = H
-        self.R = R
-        self.Z = Z
-        self.generator = generator
-        self.last_sent = None
-
-        # For local filter and trigger mean
-        self.trig_x = init_x
-        self.trig_P = init_P
-
-        # Compute sending probabilities
-        self.s = s
-        # TODO get probabilities of sending with Z or not
-
-        return
-    
-    # TODO predict and optionally update local filter in overridden measure method
-
-    def is_event(self, measurement):
-        # Always send the first measurement
-        if self.last_sent == None:
-            return True
-        
-        # TODO here need to use a local estimate as mean and choose which trigger to use with generator
-        u = self.generator.next()
-        prob_not_send = np.e ** (-0.5 * (measurement - u)@np.linalg.inv(self.Z)@(measurement - u))
-        urand = np.random.uniform()
-
-        to_send = True
-        if urand <= prob_not_send:
-            to_send = False
-        return to_send
-
-"""
- 
- ######## #### ##       ######## ######## ########   ######  
- ##        ##  ##          ##    ##       ##     ## ##    ## 
- ##        ##  ##          ##    ##       ##     ## ##       
- ######    ##  ##          ##    ######   ########   ######  
- ##        ##  ##          ##    ##       ##   ##         ## 
- ##        ##  ##          ##    ##       ##    ##  ##    ## 
- ##       #### ########    ##    ######## ##     ##  ######  
- 
-"""
-
-class Filter:
-    def predict(self):
-        raise NotImplementedError
-    
-    def update(self, measurement):
-        raise NotImplementedError
-
-class BaseFilter(Filter):
-    def __init__(self, F, Q, H, R, init_state, init_cov):
-        self.F = F
-        self.Q = Q
-        self.H = H
-        self.R = R
-        self.x = init_state
-        self.P = init_cov
-        return
-    
-    def predict(self):
-        self.x = self.F@self.x
-        self.P = self.Q + (self.F@self.P@self.F.T)
-        return self.x, self.P
-    
-    def update(self, measurement):
-        S = (self.H@self.P@self.H.T) + self.R
-        invS = np.linalg.inv(S)
-
-        K = self.P@self.H.T@invS
-
-        self.x = self.x + K@(measurement - self.H@self.x)
-        self.P = self.P - (K@S@K.T)
-        return self.x, self.P
-
-class UPFilterNoUpdate(BaseFilter):
-    def update(self, measurement):
-        if measurement is not None:
-            super().update(measurement)
-        return self.x, self.P
-
-class PFilter(BaseFilter):
-    def __init__(self, F, Q, H, R, init_state, init_cov, Z, generator):
-        super().__init__(F, Q, H, R, init_state, init_cov)
-        self.Z = Z
-        self.generator = generator
-        return
-    
-    def update(self, measurement):
-        R = self.R
-        if measurement is None:
-            u = self.generator.next()
-            measurement = u
-            R = self.R + self.Z
-        
-        S = (self.H@self.P@self.H.T) + R
-        invS = np.linalg.inv(S)
-
-        K = self.P@self.H.T@invS
-
-        self.x = self.x + K@(measurement - self.H@self.x)
-        self.P = self.P - (K@S@K.T)
-
-        return self.x, self.P
- 
-"""
- 
- ##     ##    ###    #### ##    ## 
- ###   ###   ## ##    ##  ###   ## 
- #### ####  ##   ##   ##  ####  ## 
- ## ### ## ##     ##  ##  ## ## ## 
- ##     ## #########  ##  ##  #### 
- ##     ## ##     ##  ##  ##   ### 
- ##     ## ##     ## #### ##    ## 
- 
-"""
+NUM_PRIVILEGE_CLASSES = 3
 
 def main():
+    # State dimension
+    n = 4
+
     # Process model (q = noise strength, t = timestep)
     q = 0.02
     t = 0.5
@@ -239,7 +41,7 @@ def main():
     
     # Encryption
     y_effective_range = 100
-    sen_gen, filter_gen = keyed_num_gen.KeyStreamPairFactory.make_pair(2, -y_effective_range, y_effective_range)
+    sen_gen, filter_gen = keyed_num_gen.KeyStreamPairFactory.make_pair()
 
     # Filter init
     init_state = np.array([0, 1, 0, 1])
@@ -252,14 +54,15 @@ def main():
     gt_init_state = np.array([0.5, 1, -0.5, 1])
 
     # Filters
-    unprivileged_filter = UPFilterNoUpdate(F, Q, H, R, init_state, init_cov)
-    privileged_filter = PFilter(F, Q, H, R, init_state, init_cov, Z, filter_gen)
+    unpriv_filter = est.UnprivFilter(n, F, Q, H, R, init_state, init_cov)
+    priv_filter = est.PrivFilter(n, F, Q, H, R, init_state, init_cov, None, None)
+    all_key_priv_filter = est.MultKeyPrivFilter(n, F, Q, H, R, init_state, init_cov, None, None)
 
     # Sensor
-    sensor = SensorRandEvent(H, R, Z, sen_gen)
+    sensor = est.SensorWithPrivileges(n, H, R, None, None)
 
     # Ground truth (use same model filter)
-    ground_truth = GroundTruth(F, Q, gt_init_state)
+    ground_truth = est.GroundTruth(F, Q, gt_init_state)
 
     # Data
     gts = []
@@ -281,11 +84,11 @@ def main():
         gt = ground_truth.update()
         y = sensor.measure(gt)
 
-        up_pred = unprivileged_filter.predict()
-        p_pred = privileged_filter.predict()
+        up_pred = unpriv_filter.predict()
+        p_pred = priv_filter.predict()
 
-        up_update = unprivileged_filter.update(y)
-        p_update = privileged_filter.update(y)
+        up_update = unpriv_filter.update(y)
+        p_update = priv_filter.update(y)
 
         # Save all data
         gts.append(gt)
