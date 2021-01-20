@@ -33,15 +33,6 @@ def main():
                   [0, 0, 1, 0]])
     R = np.array([[5, 2], 
                   [2, 5]])
-    
-    # Event parameter
-    z_var = 500
-    Z = np.array([[z_var,     0],
-                  [    0, z_var]])
-    
-    # Encryption
-    y_effective_range = 100
-    sen_gen, filter_gen = keyed_num_gen.KeyStreamPairFactory.make_pair()
 
     # Filter init
     init_state = np.array([0, 1, 0, 1])
@@ -53,13 +44,30 @@ def main():
     # Ground truth init
     gt_init_state = np.array([0.5, 1, -0.5, 1])
 
+    # Encryption
+    sensor_generators = []
+    filter_generators = []
+    for _ in range(NUM_PRIVILEGE_CLASSES):
+        sen_gen, fil_gen = keyed_num_gen.KeyStreamPairFactory.make_pair()
+        sensor_generators.append(sen_gen)
+        filter_generators.append(fil_gen)
+        # TODO WILL THE ABOVE JUST KEEP THE FINAL PAIR - objects will be by reference...
+    
+    # Privileged covariances
+    desired_additional_variances = np.array([])
+    z_var = 500
+    Z = np.array([[z_var,     0],
+                  [    0, z_var]])
+
     # Filters
     unpriv_filter = est.UnprivFilter(n, F, Q, H, R, init_state, init_cov)
-    priv_filter = est.PrivFilter(n, F, Q, H, R, init_state, init_cov, None, None)
-    all_key_priv_filter = est.MultKeyPrivFilter(n, F, Q, H, R, init_state, init_cov, None, None)
+    all_key_priv_filter = est.MultKeyPrivFilter(n, F, Q, H, R, init_state, init_cov, None, filter_generators)
+
+    for i in range(NUM_PRIVILEGE_CLASSES):
+        priv_filter = est.PrivFilter(n, F, Q, H, R, init_state, init_cov, None, filter_generators[i])
 
     # Sensor
-    sensor = est.SensorWithPrivileges(n, H, R, None, None)
+    sensor = est.SensorWithPrivileges(n, H, R, None, filter_generators)
 
     # Ground truth (use same model filter)
     ground_truth = est.GroundTruth(F, Q, gt_init_state)
