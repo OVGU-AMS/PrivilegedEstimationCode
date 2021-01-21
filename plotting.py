@@ -61,56 +61,54 @@ def init_matplotlib_params(show_latex_fig):
 """
 
 def plot_state(plotter, state, **kwargs):
-    plotter.scatter(state[0], state[2], **kwargs)
-    return
+    return plotter.scatter(state[0], state[2], **kwargs)
 
 def plot_state_cov(plotter, state_covariance, state, **kwargs):
     state_2d = np.array([state[0], state[2]])
     state_cov_2d = np.array([[state_covariance[0][0], state_covariance[2][0]],
                              [state_covariance[0][2], state_covariance[2][2]]])
     ellipse = get_cov_ellipse(state_cov_2d, state_2d, 2, **kwargs)
-    plotter.add_artist(ellipse)
-    return
+    return plotter.add_artist(ellipse)
 
 def plot_measurement(plotter, measurement, **kwargs):
+    ret = None
     if measurement != None:
-        plotter.scatter(measurement[0], measurement[1], **kwargs)
-    return
+        ret = plotter.scatter(measurement[0], measurement[1], **kwargs)
+    return ret
 
 def plot_gt(plotter, gt, **kwargs):
-    plot_state(plotter, gt, **kwargs)
-    return
+    return plot_state(plotter, gt, **kwargs)
 
 def plot_gt_measurement_line(plotter, gt, measurement, **kwargs):
+    ret = None
     if measurement != None:
-        plotter.plot([gt[0], measurement[0]], [gt[2], measurement[1]], **kwargs)
-    return
+        ret = plotter.plot([gt[0], measurement[0]], [gt[2], measurement[1]], **kwargs)
+    return ret
 
 def plot_all_states(plotter, states, **kwargs):
-    plotter.plot([s[0] for s in states], [s[2] for s in states], **kwargs)
-    return
+    return plotter.plot([s[0] for s in states], [s[2] for s in states], **kwargs)
 
 def plot_all_state_covs(plotter, state_covariances, states, plot_freq, **kwargs):
     n = len(state_covariances)
+    ret = []
     for k in range(n):
         if k % plot_freq == 0:
-            plot_state_cov(plotter, state_covariances[k], states[k], **kwargs)
-    return
+            ret.append(plot_state_cov(plotter, state_covariances[k], states[k], **kwargs))
+    return ret
 
 def plot_all_gts(plotter, gts, **kwargs):
-    plot_all_states(plotter, gts, **kwargs)
-    return
+    return plot_all_states(plotter, gts, **kwargs)
 
 def plot_all_measurements(plotter, measurements, **kwargs):
-    plotter.scatter([s[0] for s in measurements if s is not None], [s[1] for s in measurements if s is not None], **kwargs)
-    return
+    return plotter.scatter([s[0] for s in measurements if s is not None], [s[1] for s in measurements if s is not None], **kwargs)
 
 def plot_all_gt_measurement_lines(plotter, gts, measurements, plot_freq, **kwargs):
     n = len(gts)
+    ret = []
     for k in range(n):
         if k % plot_freq == 0 and measurements[k] is not None:
-            plotter.plot([gts[k][0], measurements[k][0]], [gts[k][2], measurements[k][1]], **kwargs)
-    return
+            ret.append(plotter.plot([gts[k][0], measurements[k][0]], [gts[k][2], measurements[k][1]], **kwargs))
+    return ret
 
 """
  
@@ -124,13 +122,13 @@ def plot_all_gt_measurement_lines(plotter, gts, measurements, plot_freq, **kwarg
  
 """
 
-def plot_event_curve(plotter, f, min_measurement, max_measurement, **kwargs):
-    diff = max_measurement - min_measurement
-    ys = np.linspace(min_measurement-diff, max_measurement+diff, 1000)
-    plotter.plot(ys, [f(y) for y in ys], **kwargs)
-    plotter.plot(2*[min_measurement], [0,1], color='gray')
-    plotter.plot(2*[max_measurement], [0,1], color='gray')
-    return
+def plot_all_traces(plotter, state_covariances, **kwargs):
+    traces = [np.trace(P) for P in state_covariances]
+    return plotter.plot(range(len(traces)), traces, **kwargs)
+
+def plot_root_sqr_error(plotter, states, gts, **kwargs):
+    diff = np.array([np.sqrt(x@x) for x in [s-g for s,g in zip(states,gts)]])
+    return plotter.plot(range(len(diff)), diff, **kwargs)
 
 """
  

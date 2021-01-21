@@ -10,14 +10,16 @@ import estimation as est
 import privilege_covariances as priv_cov
 
 SIM_TIMESTEPS = 100
-NUM_PRIVILEGE_CLASSES = 3
 
 def main():
     # State dimension
     n = 4
 
+    # Measurement dimension
+    m = 2
+
     # Process model (q = noise strength, t = timestep)
-    q = 0.02
+    q = 0.01
     t = 0.5
     F = np.array([[1, t, 0, 0], 
                   [0, 1, 0, 0], 
@@ -36,91 +38,145 @@ def main():
 
     # Filter init
     init_state = np.array([0, 1, 0, 1])
-    init_cov = np.array([[4, 0, 0, 0], 
-                         [0, 4, 0, 0], 
-                         [0, 0, 4, 0], 
-                         [0, 0, 0, 4]])
+    init_cov = np.array([[30, 0, 0, 0], 
+                         [0, 30, 0, 0], 
+                         [0, 0, 30, 0], 
+                         [0, 0, 0, 30]])
     
     # Ground truth init
-    gt_init_state = np.array([0.5, 1, -0.5, 1])
+    gt_init_state = np.array([0, 1, 0, 1])
+
+    # Number of privilege classes
+    num_priv_classes = 3
+
+    # Additional covariances
+    priv_covars = [np.array([[20, 0],
+                             [0, 20]]),
+                   np.array([[14, 0],
+                             [0, 14]]),
+                   np.array([[17, 0],
+                             [0, 17]])]
+    covars_to_remove = priv_cov.priv_covars_to_covars_to_remove(priv_covars)
 
     # Encryption
     sensor_generators = []
     filter_generators = []
-    for _ in range(NUM_PRIVILEGE_CLASSES):
-        sen_gen, fil_gen = keyed_num_gen.KeyStreamPairFactory.make_pair()
-        sensor_generators.append(sen_gen)
-        filter_generators.append(fil_gen)
-        # TODO WILL THE ABOVE JUST KEEP THE FINAL PAIR - objects will be by reference...
-    
-    # Privileged covariances
-    desired_additional_variances = np.array([])
-    z_var = 500
-    Z = np.array([[z_var,     0],
-                  [    0, z_var]])
+    generator_sets = []
+    for _ in range(num_priv_classes):
+        generator_sets.append(keyed_num_gen.KeyStreamPairFactory.make_shared_key_streams(3))
+    sensor_generators, filter_generators, filter_generators_copy = list(zip(*generator_sets))
 
     # Filters
-    unpriv_filter = est.UnprivFilter(n, F, Q, H, R, init_state, init_cov)
-    all_key_priv_filter = est.MultKeyPrivFilter(n, F, Q, H, R, init_state, init_cov, None, filter_generators)
-
-    for i in range(NUM_PRIVILEGE_CLASSES):
-        priv_filter = est.PrivFilter(n, F, Q, H, R, init_state, init_cov, None, filter_generators[i])
+    unpriv_filter = est.UnprivFilter(n, m, F, Q, H, R, init_state, init_cov, covars_to_remove)
+    all_key_priv_filter = est.MultKeyPrivFilter(n, m, F, Q, H, R, init_state, init_cov, np.zeros((2,2)), covars_to_remove, filter_generators_copy)
+    priv_filters = []
+    for i in range(num_priv_classes):
+        priv_filters.append(est.PrivFilter(n, m, F, Q, H, R, init_state, init_cov, priv_covars[i], covars_to_remove[i], filter_generators[i]))
 
     # Sensor
-    sensor = est.SensorWithPrivileges(n, H, R, None, filter_generators)
+    sensor = est.SensorWithPrivileges(n, m, H, R, covars_to_remove, sensor_generators)
 
     # Ground truth (use same model filter)
     ground_truth = est.GroundTruth(F, Q, gt_init_state)
 
-    # Data
+    # Data Storage
     gts = []
     ys = []
-    up_preds = []
-    p_preds = []
-    up_updates = []
-    p_updates = []
+    unpriv_pred_list = []
+    all_key_priv_pred_list = []
+    priv_pred_lists = [[] for _ in range(num_priv_classes)]
+    unpriv_upd_list = []
+    all_key_priv_upd_list = []
+    priv_upd_lists = [[] for _ in range(num_priv_classes)]
 
     # Plotting
     plot_funcs.init_matplotlib_params(False)
     fig = plt.figure()
-    ax = fig.add_subplot(121)
-    ax2 = fig.add_subplot(122)
-    plot_funcs.plot_event_curve(ax2, lambda x: np.e ** (-0.5 * x*(z_var**-1)*x), -y_effective_range, y_effective_range)
-    ax2.set_ylim((-0.1, 1.1))
 
+    ax = fig.add_subplot(131)
+    ax.set_title(r"Single Simulation Run")
+    ax.set_xlabel(r"Location $x$")
+    ax.set_ylabel(r"Location $y$")
+
+    ax2 = fig.add_subplot(132)
+    ax2.set_title(r"Estimator Traces")
+    ax2.set_xlabel(r"Simulation Time")
+    ax2.set_ylabel(r"Covariance Trace")
+
+    ax3 = fig.add_subplot(133)
+    ax3.set_title(r"Estimator Errors")
+    ax3.set_xlabel(r"Simulation Time")
+    ax3.set_ylabel(r"Estimation Error")
+
+    # Start sim
     for _ in range(SIM_TIMESTEPS):
         gt = ground_truth.update()
         y = sensor.measure(gt)
 
-        up_pred = unpriv_filter.predict()
-        p_pred = priv_filter.predict()
+        # Predict
+        unpriv_pred = unpriv_filter.predict()
+        all_key_priv_pred = all_key_priv_filter.predict()
+        priv_preds = []
+        for i in range(num_priv_classes):
+            priv_preds.append(priv_filters[i].predict())
 
-        up_update = unpriv_filter.update(y)
-        p_update = priv_filter.update(y)
+        # Update
+        upriv_upd = unpriv_filter.update(y)
+        all_key_priv_upd = all_key_priv_filter.update(y)
+        priv_upds = []
+        for i in range(num_priv_classes):
+            priv_upds.append(priv_filters[i].update(y))
 
         # Save all data
         gts.append(gt)
         ys.append(y)
-        up_preds.append(up_pred)
-        p_preds.append(p_pred)
-        up_updates.append(up_update)
-        p_updates.append(p_update)
-    
-    # Prints
-    print(sep='\n', *(y for y in ys))
+        unpriv_pred_list.append(unpriv_pred)
+        all_key_priv_pred_list.append(all_key_priv_pred)
+        for i in range(num_priv_classes):
+            priv_pred_lists[i].append(priv_preds[i])
+        unpriv_upd_list.append(upriv_upd)
+        all_key_priv_upd_list.append(all_key_priv_upd)
+        for i in range(num_priv_classes):
+            priv_upd_lists[i].append(priv_upds[i])
 
     # Ground truth and measurement plots
-    plot_funcs.plot_all_gts(ax, gts, color='lightgrey')
-    plot_funcs.plot_all_measurements(ax, ys, color='lightgrey', marker='x')
-    plot_funcs.plot_all_gt_measurement_lines(ax, gts, ys, 5, color='lightgrey', linestyle='--')
+    gt_c = 'lightgrey'
+    gt_legend, = plot_funcs.plot_all_gts(ax, gts, color=gt_c)
+    m_legend = plot_funcs.plot_all_measurements(ax, ys, color=gt_c, marker='x')
+    plot_funcs.plot_all_gt_measurement_lines(ax, gts, ys, 5, color=gt_c, linestyle='--')
 
     # Unprivileged estimation plots
-    plot_funcs.plot_all_states(ax, [s[0] for s in up_updates], color='red')
-    plot_funcs.plot_all_state_covs(ax, [s[1] for s in up_updates], [s[0] for s in up_updates], 5, fill=False, linestyle='-', edgecolor='red')
+    unpriv_c = 'darkred'
+    unpriv_legend, = plot_funcs.plot_all_states(ax, [s[0] for s in unpriv_upd_list], color=unpriv_c)
+    plot_funcs.plot_all_state_covs(ax, [s[1] for s in unpriv_upd_list], [s[0] for s in unpriv_upd_list], 10, fill=False, linestyle='--', edgecolor=unpriv_c)
+    plot_funcs.plot_all_traces(ax2, [s[1] for s in unpriv_upd_list], linestyle='--', color=unpriv_c)
+    plot_funcs.plot_root_sqr_error(ax3, [s[0] for s in unpriv_upd_list], gts, linestyle='--', color=unpriv_c)
+
+    # All key privileged estimation plots
+    all_key_priv_c = 'darkgreen'
+    all_key_priv_legend, = plot_funcs.plot_all_states(ax, [s[0] for s in all_key_priv_upd_list], color=all_key_priv_c)
+    plot_funcs.plot_all_state_covs(ax, [s[1] for s in all_key_priv_upd_list], [s[0] for s in all_key_priv_upd_list], 10, fill=False, linestyle='--', edgecolor=all_key_priv_c)
+    plot_funcs.plot_all_traces(ax2, [s[1] for s in all_key_priv_upd_list], linestyle='--', color=all_key_priv_c)
+    plot_funcs.plot_root_sqr_error(ax3, [s[0] for s in all_key_priv_upd_list], gts, linestyle='--', color=all_key_priv_c)
 
     # Privileged estimation plots
-    plot_funcs.plot_all_states(ax, [s[0] for s in p_updates], color='green')
-    plot_funcs.plot_all_state_covs(ax, [s[1] for s in p_updates], [s[0] for s in p_updates], 5, fill=False, linestyle='-', edgecolor='green')
+    priv_cs = []
+    priv_legends = []
+    for i in range(num_priv_classes):
+        c = 'C'+str(i)
+        priv_update_list = priv_upd_lists[i]
+        priv_cs.append(c)
+
+        priv_legends.append(plot_funcs.plot_all_states(ax, [s[0] for s in priv_update_list], color=c)[0])
+        plot_funcs.plot_all_state_covs(ax, [s[1] for s in priv_update_list], [s[0] for s in priv_update_list], 10, fill=False, linestyle='-', edgecolor=c)
+        plot_funcs.plot_all_traces(ax2, [s[1] for s in priv_update_list], color=c)
+        plot_funcs.plot_root_sqr_error(ax3, [s[0] for s in priv_update_list], gts, color=c)
+    
+    # Shared legend
+    fig.legend(handles=[gt_legend, m_legend, unpriv_legend, all_key_priv_legend]+priv_legends, 
+               labels=["Ground Truth", "Measurements", "No Key Estimator", "All Key Estimator"]+["Privileged Estimator "+str(i+1) for i in range(num_priv_classes)],
+               loc="upper center",
+               ncol=2)
 
     # Show figure
     plt.show()
