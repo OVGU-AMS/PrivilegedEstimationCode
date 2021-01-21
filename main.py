@@ -99,12 +99,12 @@ def main():
     ax.set_ylabel(r"Location $y$")
 
     ax2 = fig.add_subplot(132)
-    ax2.set_title(r"Estimator Traces")
+    ax2.set_title(r"Estimator Traces (Single Run - TEMP)")
     ax2.set_xlabel(r"Simulation Time")
     ax2.set_ylabel(r"Covariance Trace")
 
     ax3 = fig.add_subplot(133)
-    ax3.set_title(r"Estimator Errors")
+    ax3.set_title(r"Estimator Errors (Single Run - TEMP)")
     ax3.set_xlabel(r"Simulation Time")
     ax3.set_ylabel(r"Estimation Error")
 
@@ -147,14 +147,14 @@ def main():
 
     # Unprivileged estimation plots
     unpriv_c = 'darkred'
-    unpriv_legend, = plot_funcs.plot_all_states(ax, [s[0] for s in unpriv_upd_list], color=unpriv_c)
+    unpriv_legend, = plot_funcs.plot_all_states(ax, [s[0] for s in unpriv_upd_list], linestyle='--', color=unpriv_c)
     plot_funcs.plot_all_state_covs(ax, [s[1] for s in unpriv_upd_list], [s[0] for s in unpriv_upd_list], 10, fill=False, linestyle='--', edgecolor=unpriv_c)
     plot_funcs.plot_all_traces(ax2, [s[1] for s in unpriv_upd_list], linestyle='--', color=unpriv_c)
     plot_funcs.plot_root_sqr_error(ax3, [s[0] for s in unpriv_upd_list], gts, linestyle='--', color=unpriv_c)
 
     # All key privileged estimation plots
     all_key_priv_c = 'darkgreen'
-    all_key_priv_legend, = plot_funcs.plot_all_states(ax, [s[0] for s in all_key_priv_upd_list], color=all_key_priv_c)
+    all_key_priv_legend, = plot_funcs.plot_all_states(ax, [s[0] for s in all_key_priv_upd_list], linestyle='--', color=all_key_priv_c)
     plot_funcs.plot_all_state_covs(ax, [s[1] for s in all_key_priv_upd_list], [s[0] for s in all_key_priv_upd_list], 10, fill=False, linestyle='--', edgecolor=all_key_priv_c)
     plot_funcs.plot_all_traces(ax2, [s[1] for s in all_key_priv_upd_list], linestyle='--', color=all_key_priv_c)
     plot_funcs.plot_root_sqr_error(ax3, [s[0] for s in all_key_priv_upd_list], gts, linestyle='--', color=all_key_priv_c)
