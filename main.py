@@ -25,16 +25,37 @@ def main():
                   [0, 1, 0, 0], 
                   [0, 0, 1, t], 
                   [0, 0, 0, 1]])
+    
+    # TEMP
+    F2 = lambda w: np.array([[1, np.sin(w*t)/w, 0, -(1-np.cos(w*t))/w],
+                         [0, np.cos(w*t), 0, -np.sin(w*t)], 
+                         [0, -(1-np.cos(w*t))/w, 1, np.sin(w*t)/w], 
+                         [0, np.sin(w*t), 0, np.cos(w*t)]])
+    F = F2(0.05)
+    F3 = np.array([[1.0058, 0.0077, -0.0002, -0.0148],
+                   [0.7808, 1.0058, -0.2105, -0.0016],
+                   [-0.0060, -0.0000, 1.0077, 0.0150],
+                   [-0.7962, -0.0060, 1.0294, 1.0077]])
+    F = F3
+
     Q = q*np.array([[t**3/3, t**2/2,      0,      0], 
                     [t**2/2,      t,      0,      0], 
                     [     0,      0, t**3/3, t**2/2],
                     [     0,      0, t**2/2,      t]])
+    
+    # TEMP
+    q = np.array([0.003, 1.0000, -0.005, -2.150])
+    Q = np.outer(q,q)
 
     # Measurement model
     H = np.array([[1, 0, 0, 0], 
                   [0, 0, 1, 0]])
     R = np.array([[5, 2], 
                   [2, 5]])
+    
+    # TEMP
+    R2 = 0.001 * np.eye(2)
+    R = R2
 
     # Filter init
     init_state = np.array([0, 1, 0, 1])
@@ -46,6 +67,9 @@ def main():
     # Ground truth init
     gt_init_state = np.array([0, 1, 0, 1])
 
+    # TEMP
+    gt_init_state = np.array([0.5, 1.1, -0.2, 1])
+
     # Number of privilege classes
     num_priv_classes = 3
 
@@ -56,6 +80,10 @@ def main():
                              [0, 14]]),
                    np.array([[17, 0],
                              [0, 17]])]
+    
+    # TEMP
+    priv_covars = [1*x for x in priv_covars]
+
     covars_to_remove = priv_cov.priv_covars_to_covars_to_remove(priv_covars)
 
     # Encryption
