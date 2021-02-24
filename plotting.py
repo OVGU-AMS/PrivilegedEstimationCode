@@ -20,11 +20,12 @@ import numpy as np
  
 """
 
-def init_matplotlib_params(show_latex_fig):
+def init_matplotlib_params(save_not_show_fig, show_latex_fig):
     fontsize = 9
     linewidth = 1.0
     gridlinewidth = 0.7
 
+    # Global changes
     matplotlib.rcParams.update({
             # Fonts
             'font.size': fontsize,
@@ -39,7 +40,12 @@ def init_matplotlib_params(show_latex_fig):
             'grid.linewidth': gridlinewidth
         })
 
-    if show_latex_fig:
+    # Backend if saving
+    if save_not_show_fig:
+        matplotlib.use("pgf")
+
+    # Font if saving or ploting in tex mode
+    if save_not_show_fig or show_latex_fig:
         matplotlib.rcParams.update({
             "pgf.texsystem": "pdflatex",   
             'font.family': 'serif',         # Use serif/main font for text elements
@@ -121,6 +127,12 @@ def plot_all_gt_measurement_lines(plotter, gts, measurements, plot_freq, **kwarg
  #### ##    ## ##        #######  
  
 """
+
+def plot_avg_all_traces(plotter, state_covariances_lists, **kwargs):
+    pass
+
+def plot_avg_all_root_sqr_error(plotter, states_lists, gts_lists, **kwargs):
+    pass
 
 def plot_all_traces(plotter, state_covariances, **kwargs):
     traces = [np.trace(P) for P in state_covariances]

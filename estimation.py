@@ -73,8 +73,8 @@ class SensorWithPrivileges(SensorPure):
         for i in range(self.num_privs):
             n = self.generators[i].next_n_as_gaussian(self.m, np.array([0 for _ in range(self.m)]), self.covars_to_remove[i])
             noise += n
-            print("Sensor noise %d: " % i, n)
-        print("Sensor noise sum: ", noise)
+            #print("Sensor noise %d: " % i, n)
+        #print("Sensor noise sum: ", noise)
         return noise
     
 
@@ -164,6 +164,6 @@ class MultKeyPrivFilter(KFilter):
         for i in range(self.num_privs):
             n = self.generators[i].next_n_as_gaussian(self.m, np.array([0 for _ in range(self.m)]), self.covars_to_remove[i])
             noise += n
-            print("Added noise %d: " % i, n)
-        print("Added noise sum: ", noise)
+            #print("Added noise %d: " % i, n)
+        #print("Added noise sum: ", noise)
         return noise
