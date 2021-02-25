@@ -135,6 +135,15 @@ def plot_avg_all_traces(plotter, state_covariances_lists, **kwargs):
     mean_traces = np.mean(trace_lists, axis=0)
     return plotter.plot(range(len(mean_traces)), mean_traces, **kwargs)
 
+def plot_avg_all_trace_diffs(plotter, state_covariances_lists1, state_covariances_lists2, **kwargs):
+    trace_diff_lists = []
+    for i in range(len(state_covariances_lists1)):
+        covs1 = state_covariances_lists1[i]
+        covs2 = state_covariances_lists2[i]
+        trace_diff_lists.append([np.trace(P1)-np.trace(P2) for P1,P2 in zip(covs1, covs2)])
+    mean_trace_diffs = np.mean(trace_diff_lists, axis=0)
+    return plotter.plot(range(len(mean_trace_diffs)), mean_trace_diffs, **kwargs)
+
 def plot_avg_all_root_sqr_error(plotter, states_lists, gts_lists, **kwargs):
     diff_lists = []
     for i in range(len(states_lists)):
