@@ -129,10 +129,20 @@ def plot_all_gt_measurement_lines(plotter, gts, measurements, plot_freq, **kwarg
 """
 
 def plot_avg_all_traces(plotter, state_covariances_lists, **kwargs):
-    pass
+    trace_lists = []
+    for covs in state_covariances_lists:
+        trace_lists.append([np.trace(P) for P in covs])
+    mean_traces = np.mean(trace_lists, axis=0)
+    return plotter.plot(range(len(mean_traces)), mean_traces, **kwargs)
 
 def plot_avg_all_root_sqr_error(plotter, states_lists, gts_lists, **kwargs):
-    pass
+    diff_lists = []
+    for i in range(len(states_lists)):
+        states = states_lists[i]
+        gts = gts_lists[i]
+        diff_lists.append([np.sqrt(x@x) for x in [s-g for s,g in zip(states,gts)]])
+    mean_diffs = np.mean(diff_lists, axis=0)
+    return plotter.plot(range(len(mean_diffs)), mean_diffs, **kwargs)
 
 def plot_all_traces(plotter, state_covariances, **kwargs):
     traces = [np.trace(P) for P in state_covariances]
