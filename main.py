@@ -637,38 +637,6 @@ def main():
         all_sim_all_key_priv_upd_lists.append(all_key_priv_upd_list)
         all_sim_priv_upds_lists.append(copy.deepcopy(priv_upds_lists))
 
-    
-    # # Start sim
-    # for _ in range(SIM_TIMESTEPS):
-    #     gt = ground_truth.update()
-    #     y = sensor.measure(gt)
-
-    #     # Predict
-    #     unpriv_pred = unpriv_filter.predict()
-    #     all_key_priv_pred = all_key_priv_filter.predict()
-    #     priv_preds = []
-    #     for i in range(num_priv_classes):
-    #         priv_preds.append(priv_filters[i].predict())
-
-    #     # Update
-    #     upriv_upd = unpriv_filter.update(y)
-    #     all_key_priv_upd = all_key_priv_filter.update(y)
-    #     priv_upds = []
-    #     for i in range(num_priv_classes):
-    #         priv_upds.append(priv_filters[i].update(y))
-
-    #     # Save all data
-    #     gts.append(gt)
-    #     ys.append(y)
-    #     unpriv_pred_list.append(unpriv_pred)
-    #     all_key_priv_pred_list.append(all_key_priv_pred)
-    #     for i in range(num_priv_classes):
-    #         priv_pred_lists[i].append(priv_preds[i])
-    #     unpriv_upd_list.append(upriv_upd)
-    #     all_key_priv_upd_list.append(all_key_priv_upd)
-    #     for i in range(num_priv_classes):
-    #         priv_upd_lists[i].append(priv_upds[i])
-
     """
     
     ########  ##        #######  ######## 
@@ -724,7 +692,7 @@ def main():
     plot_funcs.plot_avg_all_root_sqr_error(ax_rmse_mult, [[s[0] for s in pr_upd_l] for pr_upd_l in all_sim_all_key_priv_upd_lists], all_sim_gts, linestyle='--', color='darkgreen')
 
     fig_mult.legend(handles=[all_key_priv_legend, unpriv_legend]+priv_legends, 
-               labels=["All Key", "No Key"] + ["Priv. %d" %(i+1) for i in range(num_priv_classes)],
+               labels=["All Keys", "No Keys"] + ["Priv. %d" %(i+1) for i in range(num_priv_classes)],
                loc="upper center",
                ncol=3)
     
@@ -733,40 +701,6 @@ def main():
         plt.savefig('pictures/multiple_level.pdf')
     else:
         plt.show()
-
-    # # Unprivileged estimation plots
-    # unpriv_c = 'darkred'
-    # unpriv_legend, = plot_funcs.plot_all_states(ax, [s[0] for s in unpriv_upd_list], linestyle='--', color=unpriv_c)
-    # plot_funcs.plot_all_state_covs(ax, [s[1] for s in unpriv_upd_list], [s[0] for s in unpriv_upd_list], 10, fill=False, linestyle='--', edgecolor=unpriv_c)
-    # plot_funcs.plot_all_traces(ax2, [s[1] for s in unpriv_upd_list], linestyle='--', color=unpriv_c)
-    # plot_funcs.plot_root_sqr_error(ax3, [s[0] for s in unpriv_upd_list], gts, linestyle='--', color=unpriv_c)
-
-    # # All key privileged estimation plots
-    # all_key_priv_c = 'darkgreen'
-    # all_key_priv_legend, = plot_funcs.plot_all_states(ax, [s[0] for s in all_key_priv_upd_list], linestyle='--', color=all_key_priv_c)
-    # plot_funcs.plot_all_state_covs(ax, [s[1] for s in all_key_priv_upd_list], [s[0] for s in all_key_priv_upd_list], 10, fill=False, linestyle='--', edgecolor=all_key_priv_c)
-    # plot_funcs.plot_all_traces(ax2, [s[1] for s in all_key_priv_upd_list], linestyle='--', color=all_key_priv_c)
-    # plot_funcs.plot_root_sqr_error(ax3, [s[0] for s in all_key_priv_upd_list], gts, linestyle='--', color=all_key_priv_c)
-
-    # # Privileged estimation plots
-    # priv_cs = []
-    # priv_legends = []
-    # for i in range(num_priv_classes):
-    #     c = 'C'+str(i)
-    #     priv_update_list = priv_upd_lists[i]
-    #     priv_cs.append(c)
-
-    #     priv_legends.append(plot_funcs.plot_all_states(ax, [s[0] for s in priv_update_list], color=c)[0])
-    #     plot_funcs.plot_all_state_covs(ax, [s[1] for s in priv_update_list], [s[0] for s in priv_update_list], 10, fill=False, linestyle='-', edgecolor=c)
-    #     plot_funcs.plot_all_traces(ax2, [s[1] for s in priv_update_list], color=c)
-    #     plot_funcs.plot_root_sqr_error(ax3, [s[0] for s in priv_update_list], gts, color=c)
-    
-    # # Shared legend
-    # fig.legend(handles=[gt_legend, m_legend, unpriv_legend, all_key_priv_legend]+priv_legends, 
-    #            labels=["Ground Truth", "Measurements", "No Key Estimator", "All Key Estimator"]+["Privileged Estimator "+str(i+1) for i in range(num_priv_classes)],
-    #            loc="upper center",
-    #            ncol=2)
-
 
 
 if __name__ == '__main__':
