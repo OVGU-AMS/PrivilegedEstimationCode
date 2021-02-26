@@ -270,7 +270,7 @@ def main():
     print("Making single level bounded plot ...")
 
     plot_width = 3.4
-    plot_height = 1.7
+    plot_height = 1.3
     fig_bounded = plt.figure()
     fig_bounded.set_size_inches(w=plot_width, h=plot_height)
 
@@ -287,7 +287,7 @@ def main():
     ax_rmse_bounded.set_xticks([])
 
     # Size adjusting to fit in latex columns
-    plt.subplots_adjust(left=0.13, right=0.87, bottom=0.1, top=0.7, wspace=0.4)
+    plt.subplots_adjust(left=0.1, right=0.9, bottom=0.11, top=0.65, wspace=0.4)
 
     diff_legend, = plot_funcs.plot_avg_all_trace_diffs(ax_tr_bounded, [[s[1] for s in up_upd_l] for up_upd_l in all_sim_unpriv_upd_lists], 
                                                                       [[s[1] for s in pr_upd_l] for pr_upd_l in all_sim_priv_upd_lists], 
@@ -453,7 +453,7 @@ def main():
     print("Making single level unbounded plot ...")
 
     plot_width = 3.4
-    plot_height = 1.7
+    plot_height = 1.3
     fig_unbounded = plt.figure()
     fig_unbounded.set_size_inches(w=plot_width, h=plot_height)
 
@@ -470,7 +470,7 @@ def main():
     ax_rmse_unbounded.set_xticks([])
 
     # Size adjusting to fit in latex columns
-    plt.subplots_adjust(left=0.13, right=0.87, bottom=0.1, top=0.7, wspace=0.4)
+    plt.subplots_adjust(left=0.135, right=0.865, bottom=0.11, top=0.65, wspace=0.4)
 
     diff_legend, = plot_funcs.plot_avg_all_trace_diffs(ax_tr_unbounded, [[s[1] for s in up_upd_l] for up_upd_l in all_sim_unpriv_upd_lists], 
                                                                         [[s[1] for s in pr_upd_l] for pr_upd_l in all_sim_priv_upd_lists], 
@@ -653,7 +653,7 @@ def main():
     print("Making multiple level plot ...")
 
     plot_width = 3.4
-    plot_height = 1.7
+    plot_height = 1.4
     fig_mult = plt.figure()
     fig_mult.set_size_inches(w=plot_width, h=plot_height)
 
@@ -670,7 +670,7 @@ def main():
     ax_rmse_mult.set_xticks([])
 
     # Size adjusting to fit in latex columns
-    plt.subplots_adjust(left=0.13, right=0.87, bottom=0.1, top=0.6, wspace=0.4)
+    plt.subplots_adjust(left=0.1, right=0.9, bottom=0.11, top=0.56, wspace=0.4)
 
     unpriv_legend, = plot_funcs.plot_avg_all_traces(ax_tr_mult, [[s[1] for s in up_upd_l] for up_upd_l in all_sim_unpriv_upd_lists], linestyle='--', color='darkred')
     all_key_priv_legend, = plot_funcs.plot_avg_all_traces(ax_tr_mult, [[s[1] for s in ak_pr_upd_l] for ak_pr_upd_l in all_sim_all_key_priv_upd_lists], linestyle='--', color='darkgreen')

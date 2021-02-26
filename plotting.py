@@ -21,7 +21,7 @@ import numpy as np
 """
 
 def init_matplotlib_params(save_not_show_fig, show_latex_fig):
-    fontsize = 9
+    fontsize = 8
     linewidth = 1.0
     gridlinewidth = 0.7
 
