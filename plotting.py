@@ -144,12 +144,12 @@ def plot_avg_all_trace_diffs(plotter, state_covariances_lists1, state_covariance
     mean_trace_diffs = np.mean(trace_diff_lists, axis=0)
     return plotter.plot(range(len(mean_trace_diffs)), mean_trace_diffs, **kwargs)
 
-def plot_avg_all_root_sqr_error(plotter, states_lists, gts_lists, **kwargs):
+def plot_avg_all_sqr_error(plotter, states_lists, gts_lists, **kwargs):
     diff_lists = []
     for i in range(len(states_lists)):
         states = states_lists[i]
         gts = gts_lists[i]
-        diff_lists.append([np.sqrt(x@x) for x in [s-g for s,g in zip(states,gts)]])
+        diff_lists.append([x@x for x in [s-g for s,g in zip(states,gts)]])
     mean_diffs = np.mean(diff_lists, axis=0)
     return plotter.plot(range(len(mean_diffs)), mean_diffs, **kwargs)
 
@@ -157,8 +157,8 @@ def plot_all_traces(plotter, state_covariances, **kwargs):
     traces = [np.trace(P) for P in state_covariances]
     return plotter.plot(range(len(traces)), traces, **kwargs)
 
-def plot_root_sqr_error(plotter, states, gts, **kwargs):
-    diff = np.array([np.sqrt(x@x) for x in [s-g for s,g in zip(states,gts)]])
+def plot_sqr_error(plotter, states, gts, **kwargs):
+    diff = np.array([x@x for x in [s-g for s,g in zip(states,gts)]])
     return plotter.plot(range(len(diff)), diff, **kwargs)
 
 """

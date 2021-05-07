@@ -280,11 +280,11 @@ def main():
     ax_tr_bounded.set_ylabel(r"Trace")
     ax_tr_bounded.set_xticks([])
 
-    ax_rmse_bounded = fig_bounded.add_subplot(122)
-    ax_rmse_bounded.set_title(r"Errors")
-    ax_rmse_bounded.set_xlabel(r"Simulation Time")
-    ax_rmse_bounded.set_ylabel(r"RMSE")
-    ax_rmse_bounded.set_xticks([])
+    ax_mse_bounded = fig_bounded.add_subplot(122)
+    ax_mse_bounded.set_title(r"Errors")
+    ax_mse_bounded.set_xlabel(r"Simulation Time")
+    ax_mse_bounded.set_ylabel(r"MSE")
+    ax_mse_bounded.set_xticks([])
 
     # Size adjusting to fit in latex columns
     plt.subplots_adjust(left=0.1, right=0.9, bottom=0.11, top=0.65, wspace=0.4)
@@ -296,8 +296,8 @@ def main():
     priv_legend, = plot_funcs.plot_avg_all_traces(ax_tr_bounded, [[s[1] for s in pr_upd_l] for pr_upd_l in all_sim_priv_upd_lists], linestyle='-', color='darkgreen')
     
 
-    plot_funcs.plot_avg_all_root_sqr_error(ax_rmse_bounded, [[s[0] for s in up_upd_l] for up_upd_l in all_sim_unpriv_upd_lists], all_sim_gts, linestyle='-', color='darkred')
-    plot_funcs.plot_avg_all_root_sqr_error(ax_rmse_bounded, [[s[0] for s in pr_upd_l] for pr_upd_l in all_sim_priv_upd_lists], all_sim_gts, linestyle='-', color='darkgreen')
+    plot_funcs.plot_avg_all_sqr_error(ax_mse_bounded, [[s[0] for s in up_upd_l] for up_upd_l in all_sim_unpriv_upd_lists], all_sim_gts, linestyle='-', color='darkred')
+    plot_funcs.plot_avg_all_sqr_error(ax_mse_bounded, [[s[0] for s in pr_upd_l] for pr_upd_l in all_sim_priv_upd_lists], all_sim_gts, linestyle='-', color='darkgreen')
 
     fig_bounded.legend(handles=[priv_legend, unpriv_legend, diff_legend], 
                labels=["Priv.", "Unpriv.", "Diff."],
@@ -463,14 +463,14 @@ def main():
     ax_tr_unbounded.set_ylabel(r"Trace")
     ax_tr_unbounded.set_xticks([])
 
-    ax_rmse_unbounded = fig_unbounded.add_subplot(122)
-    ax_rmse_unbounded.set_title(r"Errors")
-    ax_rmse_unbounded.set_xlabel(r"Simulation Time")
-    ax_rmse_unbounded.set_ylabel(r"RMSE")
-    ax_rmse_unbounded.set_xticks([])
+    ax_mse_unbounded = fig_unbounded.add_subplot(122)
+    ax_mse_unbounded.set_title(r"Errors")
+    ax_mse_unbounded.set_xlabel(r"Simulation Time")
+    ax_mse_unbounded.set_ylabel(r"MSE")
+    ax_mse_unbounded.set_xticks([])
 
     # Size adjusting to fit in latex columns
-    plt.subplots_adjust(left=0.135, right=0.865, bottom=0.11, top=0.65, wspace=0.4)
+    plt.subplots_adjust(left=0.13, right=0.87, bottom=0.11, top=0.65, wspace=0.5)
 
     diff_legend, = plot_funcs.plot_avg_all_trace_diffs(ax_tr_unbounded, [[s[1] for s in up_upd_l] for up_upd_l in all_sim_unpriv_upd_lists], 
                                                                         [[s[1] for s in pr_upd_l] for pr_upd_l in all_sim_priv_upd_lists], 
@@ -479,8 +479,8 @@ def main():
     priv_legend, = plot_funcs.plot_avg_all_traces(ax_tr_unbounded, [[s[1] for s in pr_upd_l] for pr_upd_l in all_sim_priv_upd_lists], linestyle='-', color='darkgreen')
     
 
-    plot_funcs.plot_avg_all_root_sqr_error(ax_rmse_unbounded, [[s[0] for s in up_upd_l] for up_upd_l in all_sim_unpriv_upd_lists], all_sim_gts, linestyle='-', color='darkred')
-    plot_funcs.plot_avg_all_root_sqr_error(ax_rmse_unbounded, [[s[0] for s in pr_upd_l] for pr_upd_l in all_sim_priv_upd_lists], all_sim_gts, linestyle='-', color='darkgreen')
+    plot_funcs.plot_avg_all_sqr_error(ax_mse_unbounded, [[s[0] for s in up_upd_l] for up_upd_l in all_sim_unpriv_upd_lists], all_sim_gts, linestyle='-', color='darkred')
+    plot_funcs.plot_avg_all_sqr_error(ax_mse_unbounded, [[s[0] for s in pr_upd_l] for pr_upd_l in all_sim_priv_upd_lists], all_sim_gts, linestyle='-', color='darkgreen')
 
     fig_unbounded.legend(handles=[priv_legend, unpriv_legend, diff_legend], 
                labels=["Priv.", "Unpriv.", "Diff."],
@@ -663,11 +663,11 @@ def main():
     ax_tr_mult.set_ylabel(r"Trace")
     ax_tr_mult.set_xticks([])
 
-    ax_rmse_mult = fig_mult.add_subplot(122)
-    ax_rmse_mult.set_title(r"Errors")
-    ax_rmse_mult.set_xlabel(r"Simulation Time")
-    ax_rmse_mult.set_ylabel(r"RMSE")
-    ax_rmse_mult.set_xticks([])
+    ax_mse_mult = fig_mult.add_subplot(122)
+    ax_mse_mult.set_title(r"Errors")
+    ax_mse_mult.set_xlabel(r"Simulation Time")
+    ax_mse_mult.set_ylabel(r"MSE")
+    ax_mse_mult.set_xticks([])
 
     # Size adjusting to fit in latex columns
     plt.subplots_adjust(left=0.1, right=0.9, bottom=0.11, top=0.56, wspace=0.4)
@@ -683,16 +683,16 @@ def main():
         priv_cs.append(c)
 
         legend, = plot_funcs.plot_avg_all_traces(ax_tr_mult, [[s[1] for s in upd_l] for upd_l in all_sim_priv_upd_list], color=c)
-        plot_funcs.plot_avg_all_root_sqr_error(ax_rmse_mult, [[s[0] for s in upd_l] for upd_l in all_sim_priv_upd_list], all_sim_gts, color=c)
+        plot_funcs.plot_avg_all_sqr_error(ax_mse_mult, [[s[0] for s in upd_l] for upd_l in all_sim_priv_upd_list], all_sim_gts, color=c)
 
         priv_legends.append(legend)
     
 
-    plot_funcs.plot_avg_all_root_sqr_error(ax_rmse_mult, [[s[0] for s in up_upd_l] for up_upd_l in all_sim_unpriv_upd_lists], all_sim_gts, linestyle='--', color='darkred')
-    plot_funcs.plot_avg_all_root_sqr_error(ax_rmse_mult, [[s[0] for s in pr_upd_l] for pr_upd_l in all_sim_all_key_priv_upd_lists], all_sim_gts, linestyle='--', color='darkgreen')
+    plot_funcs.plot_avg_all_sqr_error(ax_mse_mult, [[s[0] for s in up_upd_l] for up_upd_l in all_sim_unpriv_upd_lists], all_sim_gts, linestyle='--', color='darkred')
+    plot_funcs.plot_avg_all_sqr_error(ax_mse_mult, [[s[0] for s in pr_upd_l] for pr_upd_l in all_sim_all_key_priv_upd_lists], all_sim_gts, linestyle='--', color='darkgreen')
 
     fig_mult.legend(handles=[all_key_priv_legend, unpriv_legend]+priv_legends, 
-               labels=["All Keys", "No Keys"] + ["Priv. %d" %(i+1) for i in range(num_priv_classes)],
+               labels=["All Keys", "No Keys"] + ["$\mathsf{sk}_%d$" %(i+1) for i in range(num_priv_classes)],
                loc="upper center",
                ncol=3)
     
